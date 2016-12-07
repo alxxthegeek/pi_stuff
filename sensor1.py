@@ -29,11 +29,13 @@ def read_temp():
     temp = float(lines[1][equals_pos[0]+2:])/1000, float(lines[3][equals_pos[1]+2:])/1000
     return temp
 
-def send_metric():
+def send_metric(val,title):
     conn_cw=cloudwatch.connect_to_region('us-east-1')
-    conn_cw.put_metric_data(namespace='my_namespace',name='my_metric',value='1',dimensions={'temp':'c'})
+    conn_cw.put_metric_data(namespace='kegmetrics',name=title,value='1',dimensions={'temp':'c'})
 	
 while True:
         temp = read_temp()
 	print('T1:'+str(temp[0])+' T2:'+str(temp[1]))	
+        send_metric(temp[0],'T1')
+        send_metric(temp[1],'T2')
 	time.sleep(5)
