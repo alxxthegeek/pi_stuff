@@ -1,11 +1,11 @@
 import os
 import glob
 import time
-import datetime
 from boto.utils import get_instance_metadata
+import datetime
+import subprocess
+
 from boto.ec2 import cloudwatch
-
-
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
 
@@ -13,16 +13,26 @@ device_folder = glob.glob('/sys/bus/w1/devices/28*')
 device_file = [device_folder[0] + '/w1_slave',device_folder[1] + '/w1_slave']
 
 def read_temp_raw():
-    f1 = open(device_file[0], 'r')
-    lines_1 = f1.readlines()
-    f1.close()
-    f_2 = open(device_file[1], 'r')
-    lines_2 = f_2.readlines()
-    f_2.close()
-    return lines_1 + lines_2
+	catdata0 = subprocess.Popen(['cat',device_file[0]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	out0,err = catdata0.communicate()
+	out_decode0 = out0.decode('utf-8')
+	lines0 = out_decode0.split('\n')
+        lines_0 = ','.join(lines0).strip()
+        lines_0 = lines_0.split(',')
+
+        catdata1 = subprocess.Popen(['cat',device_file[1]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	out1,err = catdata1.communicate()
+	out_decode1 = out1.decode('utf-8')
+	lines_1 = out_decode1.split('\n')
+        lines_1 = ','.join(lines_1).strip()
+        lines_1 = lines_1.split(',')
+
+        print(lines_1)
+	return lines_0 + lines_1
 
 def read_temp():
     lines = read_temp_raw()
+    print(lines[0].strip()[-3:])
     while lines[0].strip()[-3:] != 'YES':
         time.sleep(0.2)
         lines = read_temp_raw()
