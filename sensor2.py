@@ -4,13 +4,19 @@ import time
 from boto.utils import get_instance_metadata
 import datetime
 import subprocess
-
+from pyblinkm import BlinkM, Scripts
 from boto.ec2 import cloudwatch
+
 os.system('modprobe w1-gpio')
 os.system('modprobe w1-therm')
+os.system('modprobe i2c-bcm2708')
+os.system('modprobe i2c-dev')
 
 device_folder = glob.glob('/sys/bus/w1/devices/28*')
 device_file = [device_folder[0] + '/w1_slave',device_folder[1] + '/w1_slave']
+
+blinkm = BlinkM()
+blinkm.reset()
 
 def read_temp_raw():
 	catdata0 = subprocess.Popen(['cat',device_file[0]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -29,6 +35,34 @@ def read_temp_raw():
 
         print(lines_1)
 	return lines_0 + lines_1
+
+def set_led(temp):
+        blinkm.reset()
+	if temp > 15:    # to damn hot/makes good beer taste like vb
+	     blinkm.reset()
+	     blinkm.fade_to(255, 0, 0)  # solid red
+	elif temp >10 and temp < 15 : # to hot
+	     blinkm.reset()
+	     blinkm.play_script(Scripts.RED_FLASH)
+
+	elif temp < 10 and temp> 5:   # nearly cold enough 
+	     blinkm.reset()
+	     blinkm.play_script(Scripts.GREEN_FLASH)
+
+	elif temp < 5 and temp > 2:  # just right
+	     blinkm.reset()
+	     blinkm.fade_to(0, 255, 0)
+
+	elif temp <2 and temp > 0:   #  to cold
+	     blinkm.reset()
+	     blinkm.fade_to(0, 0, 255)
+
+	elif temp < 0:  #  to fing cold
+	     blinkm.reset()
+	     blinkm.play_script(Scripts.BLUE_FLASH)
+	else:
+             blinkm.reset()
+             blinkm.play_script(Scripts.THUNDERSTORM)
 
 def read_temp():
     lines = read_temp_raw()

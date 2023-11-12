@@ -1,4 +1,4 @@
 #!/bin/bash
 sleep 20
 cd /home/pi/sensor/
-./sensor.sh
+python /home/pi/sensor/sensor3.py
